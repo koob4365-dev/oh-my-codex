@@ -1,7 +1,7 @@
 import { existsSync, realpathSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { omxRoot } from '../utils/paths.js';
 
 export interface ProjectRuntimeCodexHome {
@@ -139,7 +139,12 @@ function canonicalizeComparableProjectPath(rawPath: string): string {
 }
 
 function isPathWithin(candidatePath: string, rootPath: string): boolean {
-  return candidatePath === rootPath || candidatePath.startsWith(`${rootPath}/`);
+  const relativePath = relative(rootPath, candidatePath);
+  return relativePath === '' || (
+    !isAbsolute(relativePath)
+    && relativePath !== '..'
+    && !relativePath.startsWith(`..${sep}`)
+  );
 }
 
 async function countImmediateSessionEntries(sessionsDir: string): Promise<number> {
